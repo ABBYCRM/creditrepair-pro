@@ -12,13 +12,13 @@ function getKey(): Buffer {
 
 export function encrypt(text: string): string {
   if (!text) return text;
+  const salt = randomBytes(SALT_LENGTH);
   const iv = randomBytes(IV_LENGTH);
-  const saltBytes = randomBytes(SALT_LENGTH);
   const key = getKey();
   const cipher = createCipheriv(ALGORITHM, key, iv);
   const encrypted = Buffer.concat([cipher.update(text, "utf8"), cipher.final()]);
   const authTag = cipher.getAuthTag();
-  const result = Buffer.concat([saltBytes, iv, authTag, encrypted]);
+  const result = Buffer.concat([salt, iv, authTag, encrypted]);
   return result.toString("base64");
 }
 
@@ -27,7 +27,7 @@ export function decrypt(encryptedData: string): string {
   try {
     const data = Buffer.from(encryptedData, "base64");
     if (data.length < SALT_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH + 1) return encryptedData;
-    const salt = data.subarray(0, SALT_LENGTH);
+    data.subarray(0, SALT_LENGTH); // skip salt
     const iv = data.subarray(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
     const authTag = data.subarray(SALT_LENGTH + IV_LENGTH, SALT_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH);
     const encrypted = data.subarray(SALT_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH);

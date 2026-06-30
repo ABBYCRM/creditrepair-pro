@@ -14163,7 +14163,7 @@ var require_sha256_password = __commonJS({
     var STATE_INITIAL = 0;
     var STATE_WAIT_SERVER_KEY = 1;
     var STATE_FINAL = -1;
-    function encrypt(password, scramble, key) {
+    function encrypt2(password, scramble, key) {
       const stage1 = xorRotating(Buffer.from(`${password}\0`, "utf8"), scramble);
       return crypto3.publicEncrypt(
         {
@@ -14178,7 +14178,7 @@ var require_sha256_password = __commonJS({
       let scramble = null;
       const password = connection.config.password;
       const authWithKey = (serverKey) => {
-        const _password = encrypt(password, scramble, serverKey);
+        const _password = encrypt2(password, scramble, serverKey);
         state = STATE_FINAL;
         return _password;
       };
@@ -14240,7 +14240,7 @@ var require_caching_sha2_password = __commonJS({
       const stage3 = sha256(Buffer.concat([stage2, scramble]));
       return xor2(stage1, stage3);
     }
-    function encrypt(password, scramble, key) {
+    function encrypt2(password, scramble, key) {
       const stage1 = xorRotating(Buffer.from(`${password}\0`, "utf8"), scramble);
       return crypto3.publicEncrypt(
         {
@@ -14256,7 +14256,7 @@ var require_caching_sha2_password = __commonJS({
       let scramble = null;
       const password = connection.config.password;
       const authWithKey = (serverKey) => {
-        const _password = encrypt(password, scramble, serverKey);
+        const _password = encrypt2(password, scramble, serverKey);
         state = STATE_FINAL;
         return _password;
       };
@@ -48526,6 +48526,27 @@ function generateCreditFactors(negatives, score, rand) {
   return factors;
 }
 
+// api/lib/crypto.ts
+import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "crypto";
+var ALGORITHM = "aes-256-gcm";
+var IV_LENGTH = 16;
+var SALT_LENGTH = 32;
+function getKey() {
+  const secret = process.env.APP_SECRET || process.env.ENCRYPTION_KEY || "creditrepair-pro-default-key-32-chars!";
+  return scryptSync(secret, "creditrepair-pro-salt", 32);
+}
+function encrypt(text2) {
+  if (!text2) return text2;
+  const salt = randomBytes(SALT_LENGTH);
+  const iv = randomBytes(IV_LENGTH);
+  const key = getKey();
+  const cipher = createCipheriv(ALGORITHM, key, iv);
+  const encrypted = Buffer.concat([cipher.update(text2, "utf8"), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  const result = Buffer.concat([salt, iv, authTag, encrypted]);
+  return result.toString("base64");
+}
+
 // api/analysis-router.ts
 var analysisRouter = createRouter({
   analyzeProfile: authedQuery.input(
@@ -48541,6 +48562,17 @@ var analysisRouter = createRouter({
   ).mutation(async ({ ctx, input }) => {
     const db = getDb();
     const userId = ctx.user.id;
+    const encryptedSsn = input.ssnLastFour ? encrypt(input.ssnLastFour) : void 0;
+    const encryptedAddress = input.address ? encrypt(input.address) : void 0;
+    await db.update(users).set({
+      name: input.name,
+      ssnLastFour: encryptedSsn,
+      dateOfBirth: input.dateOfBirth ? new Date(input.dateOfBirth) : void 0,
+      address: encryptedAddress,
+      city: input.city,
+      state: input.state,
+      zipCode: input.zipCode
+    }).where(eq(users.id, userId));
     const analysis = analyzeCreditProfile({
       name: input.name,
       ssnLastFour: input.ssnLastFour,
@@ -48638,11 +48670,7 @@ var analysisRouter = createRouter({
     if (reports.length === 0) return null;
     const accounts = await db.select().from(creditAccounts).where(eq(creditAccounts.userId, ctx.user.id));
     const scores = await db.select().from(creditScores).where(eq(creditScores.userId, ctx.user.id));
-    return {
-      reports,
-      accounts,
-      scores
-    };
+    return { reports, accounts, scores };
   })
 });
 function mapAccountType(type) {

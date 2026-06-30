@@ -1,14 +1,17 @@
 import { z } from "zod";
+import { eq, and } from "drizzle-orm";
 import { createRouter, authedQuery } from "./middleware";
 import { analyzeCreditProfile } from "./lib/credit-engine";
 import { getDb } from "./queries/connection";
 import {
+  users,
   creditReports,
   creditAccounts,
   creditScores,
   activities,
   disputes,
 } from "@db/schema";
+import { encrypt } from "./lib/crypto";
 
 export const analysisRouter = createRouter({
   analyzeProfile: authedQuery
@@ -26,6 +29,21 @@ export const analysisRouter = createRouter({
     .mutation(async ({ ctx, input }) => {
       const db = getDb();
       const userId = ctx.user.id;
+
+      // Encrypt sensitive PII before storage
+      const encryptedSsn = input.ssnLastFour ? encrypt(input.ssnLastFour) : undefined;
+      const encryptedAddress = input.address ? encrypt(input.address) : undefined;
+
+      // Update user profile with encrypted data
+      await db.update(users).set({
+        name: input.name,
+        ssnLastFour: encryptedSsn,
+        dateOfBirth: input.dateOfBirth ? new Date(input.dateOfBirth) : undefined,
+        address: encryptedAddress,
+        city: input.city,
+        state: input.state,
+        zipCode: input.zipCode,
+      }).where(eq(users.id, userId));
 
       // Run the credit analysis engine
       const analysis = analyzeCreditProfile({
@@ -58,7 +76,6 @@ export const analysisRouter = createRouter({
         });
         reportIds.push(Number(report.insertId));
 
-        // Insert credit scores
         await db.insert(creditScores).values({
           userId,
           reportId: Number(report.insertId),
@@ -141,7 +158,6 @@ export const analysisRouter = createRouter({
     }),
 
   getAnalysis: authedQuery.query(async ({ ctx }) => {
-    // Return latest analysis data from user's reports
     const db = getDb();
     const reports = await db
       .select()
@@ -161,11 +177,7 @@ export const analysisRouter = createRouter({
       .from(creditScores)
       .where(eq(creditScores.userId, ctx.user.id));
 
-    return {
-      reports,
-      accounts,
-      scores,
-    };
+    return { reports, accounts, scores };
   }),
 });
 
@@ -195,5 +207,3 @@ function mapStatus(issueType: string) {
   };
   return (map[issueType] || "unknown") as never;
 }
-
-import { eq, and } from "drizzle-orm";

@@ -1,445 +1,119 @@
 import { useState } from "react";
 import { trpc } from "@/providers/trpc";
 import { Link } from "react-router";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  FileText,
-  Plus,
-  Trash2,
-  AlertTriangle,
-  CheckCircle2,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { FileText, Plus, Trash2, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function CreditReports() {
   const utils = trpc.useUtils();
   const { data: reports, isLoading } = trpc.creditReport.list.useQuery();
-  const [selectedReport, setSelectedReport] = useState<number | null>(null);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [showAccounts, setShowAccounts] = useState(false);
-  const [formData, setFormData] = useState({
-    reportDate: new Date().toISOString().split("T")[0],
-    bureau: "equifax" as "equifax" | "experian" | "transunion",
-    score: "",
-    totalAccounts: "",
-    negativeAccounts: "",
-    inquiries: "",
-    totalBalance: "",
-  });
+  const [selected, setSelected] = useState<number | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState({ reportDate: new Date().toISOString().split("T")[0], bureau: "equifax" as const, score: "", totalAccounts: "", negativeAccounts: "", inquiries: "", totalBalance: "" });
 
-  const { data: reportWithAccounts } = trpc.creditReport.getWithAccounts.useQuery(
-    { id: selectedReport! },
-    { enabled: !!selectedReport }
-  );
+  const { data: withAccounts } = trpc.creditReport.getWithAccounts.useQuery({ id: selected! }, { enabled: !!selected });
 
-  const createReport = trpc.creditReport.create.useMutation({
-    onSuccess: () => {
-      utils.creditReport.list.invalidate();
-      utils.creditReport.stats.invalidate();
-      setShowAddForm(false);
-      toast.success("Credit report added successfully");
-      setFormData({
-        reportDate: new Date().toISOString().split("T")[0],
-        bureau: "equifax",
-        score: "",
-        totalAccounts: "",
-        negativeAccounts: "",
-        inquiries: "",
-        totalBalance: "",
-      });
-    },
+  const create = trpc.creditReport.create.useMutation({
+    onSuccess: () => { utils.creditReport.list.invalidate(); utils.creditReport.stats.invalidate(); setShowAdd(false); toast.success("Report added"); setForm({ reportDate: new Date().toISOString().split("T")[0], bureau: "equifax", score: "", totalAccounts: "", negativeAccounts: "", inquiries: "", totalBalance: "" }); },
   });
-
-  const deleteReport = trpc.creditReport.delete.useMutation({
-    onSuccess: () => {
-      utils.creditReport.list.invalidate();
-      utils.creditReport.stats.invalidate();
-      toast.success("Report deleted");
-    },
-  });
+  const del = trpc.creditReport.delete.useMutation({ onSuccess: () => { utils.creditReport.list.invalidate(); utils.creditReport.stats.invalidate(); toast.success("Deleted"); } });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createReport.mutate({
-      reportDate: formData.reportDate,
-      bureau: formData.bureau,
-      score: formData.score ? parseInt(formData.score) : undefined,
-      totalAccounts: formData.totalAccounts
-        ? parseInt(formData.totalAccounts)
-        : undefined,
-      negativeAccounts: formData.negativeAccounts
-        ? parseInt(formData.negativeAccounts)
-        : undefined,
-      inquiries: formData.inquiries ? parseInt(formData.inquiries) : undefined,
-      totalBalance: formData.totalBalance || undefined,
-    });
+    create.mutate({ reportDate: form.reportDate, bureau: form.bureau, score: form.score ? parseInt(form.score) : undefined, totalAccounts: form.totalAccounts ? parseInt(form.totalAccounts) : undefined, negativeAccounts: form.negativeAccounts ? parseInt(form.negativeAccounts) : undefined, inquiries: form.inquiries ? parseInt(form.inquiries) : undefined, totalBalance: form.totalBalance || undefined });
   };
 
-  const bureauColor = (bureau: string) => {
-    switch (bureau) {
-      case "equifax":
-        return "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400";
-      case "experian":
-        return "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400";
-      case "transunion":
-        return "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400";
-      default:
-        return "bg-slate-50 text-slate-700";
-    }
-  };
+  const bureauColor = (b: string) => ({ equifax: "text-red-400 bg-red-400/10", experian: "text-blue-400 bg-blue-400/10", transunion: "text-emerald-400 bg-emerald-400/10" })[b] || "text-white/40";
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-            Credit Reports
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Manage your credit reports and imported accounts
-          </p>
+          <div className="flex items-center gap-2"><FileText className="w-3.5 h-3.5 text-[#d4a843]" /><p className="text-[10px] uppercase tracking-[0.15em] text-[#d4a843]/60">Bureau Reports</p></div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-white mt-1" style={{ fontFamily: "'Playfair Display', serif" }}>Credit Reports</h1>
+          <p className="text-sm text-white/40 mt-1">Manage credit reports and imported accounts</p>
         </div>
-        <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-          <DialogTrigger asChild>
-            <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700">
-              <Plus className="w-4 h-4" />
-              Add Report
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Add New Credit Report</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="reportDate">Report Date</Label>
-                  <Input
-                    id="reportDate"
-                    type="date"
-                    value={formData.reportDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, reportDate: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bureau">Bureau</Label>
-                  <Select
-                    value={formData.bureau}
-                    onValueChange={(v: "equifax" | "experian" | "transunion") =>
-                      setFormData({ ...formData, bureau: v })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="equifax">Equifax</SelectItem>
-                      <SelectItem value="experian">Experian</SelectItem>
-                      <SelectItem value="transunion">TransUnion</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="score">Credit Score</Label>
-                  <Input
-                    id="score"
-                    type="number"
-                    placeholder="e.g. 720"
-                    value={formData.score}
-                    onChange={(e) =>
-                      setFormData({ ...formData, score: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="inquiries">Inquiries</Label>
-                  <Input
-                    id="inquiries"
-                    type="number"
-                    placeholder="0"
-                    value={formData.inquiries}
-                    onChange={(e) =>
-                      setFormData({ ...formData, inquiries: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="totalAccounts">Total Accounts</Label>
-                  <Input
-                    id="totalAccounts"
-                    type="number"
-                    placeholder="0"
-                    value={formData.totalAccounts}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        totalAccounts: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="negativeAccounts">Negative</Label>
-                  <Input
-                    id="negativeAccounts"
-                    type="number"
-                    placeholder="0"
-                    value={formData.negativeAccounts}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        negativeAccounts: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="totalBalance">Total Balance</Label>
-                  <Input
-                    id="totalBalance"
-                    type="text"
-                    placeholder="$0.00"
-                    value={formData.totalBalance}
-                    onChange={(e) =>
-                      setFormData({ ...formData, totalBalance: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-              <Button
-                type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
-                disabled={createReport.isPending}
-              >
-                {createReport.isPending ? "Adding..." : "Add Report"}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <button onClick={() => setShowAdd(true)} className="btn-gold flex items-center gap-2 text-sm"><Plus className="w-4 h-4" /> Add Report</button>
       </div>
 
-      {/* Reports List */}
-      {isLoading ? (
-        <div className="text-center py-12 text-slate-500">Loading...</div>
-      ) : reports && reports.length > 0 ? (
+      {showAdd && (
+        <div className="glass-card p-5">
+          <h3 className="text-sm font-semibold text-white/70 mb-4">Add New Credit Report</h3>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="space-y-1.5"><Label className="text-xs text-white/40">Date</Label><input type="date" value={form.reportDate} onChange={e => setForm({ ...form, reportDate: e.target.value })} required className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm" /></div>
+              <div className="space-y-1.5"><Label className="text-xs text-white/40">Bureau</Label>
+                <Select value={form.bureau} onValueChange={v => setForm({ ...form, bureau: v as typeof form.bureau })}>
+                  <SelectTrigger className="bg-white/[0.04] border-white/10 text-white h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-[#0f1117] border-white/10"><SelectItem value="equifax">Equifax</SelectItem><SelectItem value="experian">Experian</SelectItem><SelectItem value="transunion">TransUnion</SelectItem></SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5"><Label className="text-xs text-white/40">Score</Label><input type="number" placeholder="720" value={form.score} onChange={e => setForm({ ...form, score: e.target.value })} className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm" /></div>
+              <div className="space-y-1.5"><Label className="text-xs text-white/40">Inquiries</Label><input type="number" placeholder="0" value={form.inquiries} onChange={e => setForm({ ...form, inquiries: e.target.value })} className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm" /></div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5"><Label className="text-xs text-white/40">Total Accounts</Label><input type="number" placeholder="0" value={form.totalAccounts} onChange={e => setForm({ ...form, totalAccounts: e.target.value })} className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm" /></div>
+              <div className="space-y-1.5"><Label className="text-xs text-white/40">Negative</Label><input type="number" placeholder="0" value={form.negativeAccounts} onChange={e => setForm({ ...form, negativeAccounts: e.target.value })} className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm" /></div>
+              <div className="space-y-1.5"><Label className="text-xs text-white/40">Total Balance</Label><input type="text" placeholder="$0.00" value={form.totalBalance} onChange={e => setForm({ ...form, totalBalance: e.target.value })} className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm" /></div>
+            </div>
+            <div className="flex gap-2"><button type="button" onClick={() => setShowAdd(false)} className="px-4 py-2 rounded-lg text-xs text-white/40 border border-white/10 hover:bg-white/5 transition-colors">Cancel</button><button type="submit" disabled={create.isPending} className="btn-gold text-xs disabled:opacity-50">{create.isPending ? "Adding..." : "Add Report"}</button></div>
+          </form>
+        </div>
+      )}
+
+      {isLoading ? <div className="text-center py-12 text-white/30">Loading...</div> : reports && reports.length > 0 ? (
         <div className="space-y-3">
-          {reports.map((report) => (
-            <Card key={report.id} className="overflow-hidden">
-              <CardContent className="p-0">
-                <div
-                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                  onClick={() => {
-                    if (selectedReport === report.id) {
-                      setSelectedReport(null);
-                      setShowAccounts(false);
-                    } else {
-                      setSelectedReport(report.id);
-                      setShowAccounts(true);
-                    }
-                  }}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-slate-600" />
+          {reports.map(r => (
+            <div key={r.id} className="glass-card overflow-hidden">
+              <div onClick={() => setSelected(selected === r.id ? null : r.id)} className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/[0.02] transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-white/[0.04] flex items-center justify-center"><FileText className="w-5 h-5 text-white/40" /></div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${bureauColor(r.bureau)}`}>{r.bureau.charAt(0).toUpperCase() + r.bureau.slice(1)}</span>
+                      <span className="text-[10px] text-white/25">{new Date(r.reportDate).toLocaleDateString()}</span>
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`text-xs font-medium px-2 py-0.5 rounded-full ${bureauColor(
-                            report.bureau
-                          )}`}
-                        >
-                          {report.bureau.charAt(0).toUpperCase() +
-                            report.bureau.slice(1)}
-                        </span>
-                        <span className="text-xs text-slate-400">
-                          {new Date(report.reportDate).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white mt-1">
-                        Score: {report.score || "N/A"} |{" "}
-                        {report.totalAccounts || 0} accounts |{" "}
-                        {report.negativeAccounts || 0} negative |{" "}
-                        {report.inquiries || 0} inquiries
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteReport.mutate({ id: report.id });
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </Button>
-                    {selectedReport === report.id ? (
-                      <ChevronUp className="w-4 h-4 text-slate-400" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-slate-400" />
-                    )}
+                    <p className="text-sm text-white/70 mt-1">Score: {r.score || "N/A"} | {r.totalAccounts || 0} accounts | {r.negativeAccounts || 0} negative | {r.inquiries || 0} inquiries</p>
                   </div>
                 </div>
-
-                {/* Accounts detail */}
-                {showAccounts && selectedReport === report.id && (
-                  <div className="border-t border-slate-200 dark:border-slate-700 p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                        Accounts in this Report
-                      </h3>
-                      <Link to="/disputes">
-                        <Button size="sm" variant="outline" className="gap-1">
-                          <Plus className="w-3 h-3" />
-                          Add Account & Dispute
-                        </Button>
-                      </Link>
-                    </div>
-                    {reportWithAccounts?.accounts &&
-                    reportWithAccounts.accounts.length > 0 ? (
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Account</TableHead>
-                              <TableHead>Type</TableHead>
-                              <TableHead>Balance</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead>Negative</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {reportWithAccounts.accounts.map((account) => (
-                              <TableRow key={account.id}>
-                                <TableCell className="font-medium text-sm">
-                                  {account.accountName}
-                                  {account.accountNumber && (
-                                    <span className="text-xs text-slate-400 block">
-                                      ...{account.accountNumber.slice(-4)}
-                                    </span>
-                                  )}
-                                </TableCell>
-                                <TableCell className="text-sm capitalize">
-                                  {account.accountType.replace("_", " ")}
-                                </TableCell>
-                                <TableCell className="text-sm">
-                                  {account.balance
-                                    ? `$${Number(account.balance).toLocaleString()}`
-                                    : "—"}
-                                </TableCell>
-                                <TableCell>
-                                  <span
-                                    className={`text-xs px-2 py-0.5 rounded-full ${
-                                      account.status === "open"
-                                        ? "bg-blue-50 text-blue-700"
-                                        : account.status === "closed"
-                                        ? "bg-slate-100 text-slate-600"
-                                        : account.status === "collection"
-                                        ? "bg-red-50 text-red-700"
-                                        : "bg-amber-50 text-amber-700"
-                                    }`}
-                                  >
-                                    {account.status}
-                                  </span>
-                                </TableCell>
-                                <TableCell>
-                                  {account.isNegative ? (
-                                    <div className="flex items-center gap-1 text-red-600">
-                                      <AlertTriangle className="w-3.5 h-3.5" />
-                                      <span className="text-xs">
-                                        {account.negativeReason || "Yes"}
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                  )}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    ) : (
-                      <div className="text-center py-6 text-slate-500">
-                        <p className="text-sm">
-                          No accounts in this report yet
-                        </p>
-                        <Link to="/disputes">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="mt-2 gap-1"
-                          >
-                            <Plus className="w-3 h-3" />
-                            Add Your First Account
-                          </Button>
-                        </Link>
-                      </div>
-                    )}
+                <div className="flex items-center gap-2">
+                  <button onClick={e => { e.stopPropagation(); del.mutate({ id: r.id }); }} className="p-2 rounded hover:bg-red-500/5 text-red-400/40 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                  {selected === r.id ? <ChevronUp className="w-4 h-4 text-white/20" /> : <ChevronDown className="w-4 h-4 text-white/20" />}
+                </div>
+              </div>
+              {selected === r.id && (
+                <div className="border-t border-white/[0.04] p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-white/70">Accounts</h3>
+                    <Link to="/disputes"><button className="px-3 py-1.5 rounded-lg text-[10px] text-[#d4a843] border border-[#d4a843]/25 hover:bg-[#d4a843]/5 transition-colors flex items-center gap-1"><Plus className="w-3 h-3" /> Add & Dispute</button></Link>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                  {withAccounts?.accounts && withAccounts.accounts.length > 0 ? (
+                    <div className="overflow-x-auto"><Table>
+                      <TableHeader><TableRow className="border-white/[0.04] hover:bg-transparent"><TableHead className="text-white/30 text-[10px]">Account</TableHead><TableHead className="text-white/30 text-[10px]">Type</TableHead><TableHead className="text-white/30 text-[10px]">Balance</TableHead><TableHead className="text-white/30 text-[10px]">Status</TableHead><TableHead className="text-white/30 text-[10px]">Negative</TableHead></TableRow></TableHeader>
+                      <TableBody>{withAccounts.accounts.map(a => (
+                        <TableRow key={a.id} className="border-white/[0.03] hover:bg-white/[0.02]">
+                          <TableCell className="text-sm text-white/80">{a.accountName}{a.accountNumber && <span className="text-[10px] text-white/20 block">...{a.accountNumber.slice(-4)}</span>}</TableCell>
+                          <TableCell className="text-xs text-white/50 capitalize">{a.accountType.replace("_", " ")}</TableCell>
+                          <TableCell className="text-xs text-white/50">{a.balance ? `$${Number(a.balance).toLocaleString()}` : "—"}</TableCell>
+                          <TableCell><span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.04] text-white/40">{a.status}</span></TableCell>
+                          <TableCell>{a.isNegative ? <span className="flex items-center gap-1 text-red-400 text-[10px]"><CheckCircle2 className="w-3 h-3" />{a.negativeReason}</span> : <CheckCircle2 className="w-4 h-4 text-emerald-500/40" />}</TableCell>
+                        </TableRow>
+                      ))}</TableBody>
+                    </Table></div>
+                  ) : <p className="text-center py-6 text-sm text-white/30">No accounts yet.</p>}
+                </div>
+              )}
+            </div>
           ))}
         </div>
       ) : (
-        <Card>
-          <CardContent className="text-center py-12">
-            <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-1">
-              No Credit Reports Yet
-            </h3>
-            <p className="text-sm text-slate-500 mb-4">
-              Start by adding your first credit report to begin tracking
-            </p>
-            <Button
-              onClick={() => setShowAddForm(true)}
-              className="bg-emerald-600 hover:bg-emerald-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your First Report
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="glass-card p-10 text-center">
+          <FileText className="w-10 h-10 text-white/15 mx-auto mb-3" />
+          <p className="text-white/50 text-sm">No credit reports yet. Run a credit analysis or add your first report.</p>
+        </div>
       )}
     </div>
   );
