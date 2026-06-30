@@ -4,42 +4,6 @@
 
 @layer base {
   :root {
-    --background: 222 25% 5%;
-    --foreground: 0 0% 98%;
-    --card: 222 20% 8%;
-    --card-foreground: 0 0% 98%;
-    --popover: 222 20% 8%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 43 85% 55%;
-    --primary-foreground: 222 25% 5%;
-    --secondary: 222 15% 14%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 222 15% 14%;
-    --muted-foreground: 215 15% 55%;
-    --accent: 43 85% 55%;
-    --accent-foreground: 222 25% 5%;
-    --destructive: 0 65% 45%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 222 15% 16%;
-    --input: 222 15% 14%;
-    --ring: 43 85% 55%;
-    --radius: 0.75rem;
-    --chart-1: 43 85% 55%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 200 75% 50%;
-    --chart-4: 280 65% 55%;
-    --chart-5: 15 80% 55%;
-    --sidebar-background: 222 25% 5%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 43 85% 55%;
-    --sidebar-primary-foreground: 222 25% 5%;
-    --sidebar-accent: 222 15% 12%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 222 15% 14%;
-    --sidebar-ring: 43 85% 55%;
-  }
-
-  .light {
     --background: 0 0% 100%;
     --foreground: 222 25% 5%;
     --card: 0 0% 100%;
@@ -59,6 +23,12 @@
     --border: 222 15% 90%;
     --input: 222 15% 90%;
     --ring: 43 85% 45%;
+    --radius: 0.75rem;
+    --chart-1: 43 85% 55%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 200 75% 50%;
+    --chart-4: 280 65% 55%;
+    --chart-5: 15 80% 55%;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 222 25% 5%;
     --sidebar-primary: 43 85% 45%;
@@ -69,12 +39,47 @@
     --sidebar-ring: 43 85% 45%;
   }
 
+  .dark {
+    --background: 222 25% 5%;
+    --foreground: 0 0% 98%;
+    --card: 222 20% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 222 20% 8%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 43 85% 55%;
+    --primary-foreground: 222 25% 5%;
+    --secondary: 222 15% 14%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 222 15% 14%;
+    --muted-foreground: 215 15% 55%;
+    --accent: 43 85% 55%;
+    --accent-foreground: 222 25% 5%;
+    --destructive: 0 65% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 222 15% 16%;
+    --input: 222 15% 14%;
+    --ring: 43 85% 55%;
+    --chart-1: 43 85% 55%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 200 75% 50%;
+    --chart-4: 280 65% 55%;
+    --chart-5: 15 80% 55%;
+    --sidebar-background: 222 25% 5%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 43 85% 55%;
+    --sidebar-primary-foreground: 222 25% 5%;
+    --sidebar-accent: 222 15% 12%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 222 15% 14%;
+    --sidebar-ring: 43 85% 55%;
+  }
+
   * {
     @apply border-border;
   }
 
   body {
-    color: #f8f9fa;
+    @apply bg-background text-foreground;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
@@ -109,14 +114,6 @@
     background-clip: text;
   }
 
-  .gold-border {
-    border: 1px solid transparent;
-    background: linear-gradient(135deg, #d4a843, #f0c96a, #d4a843) border-box;
-    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-  }
-
   .nav-item {
     @apply flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200;
     color: rgba(255, 255, 255, 0.55);
@@ -135,7 +132,7 @@
 
   .btn-gold {
     background: linear-gradient(135deg, #d4a843 0%, #f0c96a 40%, #d4a843 70%, #b8923e 100%);
-    @apply text-black font-semibold px-6 py-2.5 rounded-lg transition-all duration-200;
+    @apply text-black font-semibold px-5 py-2 rounded-lg transition-all duration-200;
     box-shadow: 0 4px 16px rgba(212, 168, 67, 0.3);
   }
 
@@ -144,40 +141,12 @@
     transform: translateY(-1px);
   }
 
-  .score-ring {
-    @apply relative;
-  }
-
-  .score-ring::before {
-    content: '';
-    @apply absolute inset-0 rounded-full;
-    background: conic-gradient(
-      from 180deg,
-      #ef4444 0deg,
-      #f97316 60deg,
-      #eab308 120deg,
-      #22c55e 180deg,
-      #16a34a 240deg,
-      #15803d 300deg,
-      #22c55e 360deg
-    );
-    opacity: 0.15;
-  }
-
   .animate-fade-in {
     animation: fadeIn 0.5s ease-out forwards;
   }
 
   .animate-slide-up {
     animation: slideUp 0.5s ease-out forwards;
-  }
-
-  .animate-pulse-gold {
-    animation: pulseGold 2s ease-in-out infinite;
-  }
-
-  .stat-glow {
-    box-shadow: 0 0 20px rgba(212, 168, 67, 0.15), 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -191,12 +160,6 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes pulseGold {
-  0%, 100% { box-shadow: 0 0 20px rgba(212, 168, 67, 0.15); }
-  50% { box-shadow: 0 0 30px rgba(212, 168, 67, 0.25); }
-}
-
-/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
