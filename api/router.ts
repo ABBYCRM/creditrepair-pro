@@ -8,6 +8,7 @@ import { creditorRouter } from "./creditor-router";
 import { scoreRouter } from "./score-router";
 import { activityRouter } from "./activity-router";
 import { reminderRouter } from "./reminder-router";
+import { analysisRouter } from "./analysis-router";
 
 export const appRouter = createRouter({
   ping: publicQuery.query(() => ({ ok: true, ts: Date.now() })),
@@ -20,6 +21,7 @@ export const appRouter = createRouter({
   score: scoreRouter,
   activity: activityRouter,
   reminder: reminderRouter,
+  analysis: analysisRouter,
 });
 
 export type AppRouter = typeof appRouter;
