@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: creditrepair-pro
+    runtime: node
+    plan: standard
+    region: oregon
+    branch: main
+    buildCommand: npm run build
+    startCommand: node dist/boot.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: APP_ID
+        sync: false
+      - key: APP_SECRET
+        sync: false
+      - key: VITE_APP_ID
+        sync: false
+      - key: VITE_KIMI_AUTH_URL
+        value: "https://auth.kimi.com"
+      - key: DATABASE_URL
+        sync: false
+      - key: KIMI_AUTH_URL
+        value: "https://auth.kimi.com"
+      - key: KIMI_OPEN_URL
+        value: "https://open.kimi.com"
+      - key: OWNER_UNION_ID
+        sync: false
+    healthCheckPath: /api/trpc/ping
