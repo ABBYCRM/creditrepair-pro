@@ -1,7 +1,5 @@
 FROM node:20-alpine
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --omit=dev --ignore-scripts 2>&1 || npm install --omit=dev --ignore-scripts 2>&1
 COPY deploy/dist/ ./dist/
 ENV NODE_ENV=production
 ENV PORT=3000
