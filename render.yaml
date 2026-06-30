@@ -5,8 +5,8 @@ services:
     plan: starter
     region: oregon
     branch: main
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    buildCommand: chmod +x render-build.sh && ./render-build.sh
+    startCommand: chmod +x render-start.sh && ./render-start.sh
     healthCheckPath: /api/ping
     envVars:
       - key: NODE_ENV
