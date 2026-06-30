@@ -75,9 +75,11 @@
     @apply border-border;
   }
 
-  body {
-    @apply bg-background text-foreground;
+  html, body, #root {
+    background-color: #0a0b0f !important;
+    color: #f8f9fa;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
   }
 
   h1, h2, h3, h4, h5, h6 {
