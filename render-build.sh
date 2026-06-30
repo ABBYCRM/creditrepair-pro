@@ -1,14 +1,17 @@
 #!/bin/bash
 set -e
-echo "=== Starting build ==="
-echo "Node version: $(node --version)"
-echo "NPM version: $(npm --version)"
+exec > >(tee /opt/render/build-output.log) 2>&1
+echo "=== Starting build $(date) ==="
+echo "Node: $(node --version)"
+echo "NPM: $(npm --version)"
 echo "PWD: $(pwd)"
-echo "=== Installing dependencies ==="
-npm install 2>&1
-echo "=== Running build ==="
+echo "Files: $(ls -la)"
+echo "=== npm ci ==="
+npm ci 2>&1
+echo "=== npm run build ==="
 npm run build 2>&1
-echo "=== Build complete ==="
+echo "=== Build complete $(date) ==="
+echo "Dist:"
 ls -la dist/ 2>&1
-echo "=== dist/public contents ==="
+echo "Dist/public:"
 ls -la dist/public/ 2>&1
