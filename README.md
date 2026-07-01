@@ -1,73 +1,43 @@
-# React + TypeScript + Vite
+# CreditRepair Pro
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A production-grade credit repair application that actively performs credit repair — not just advice. Built with AES-256 encryption, VantageScore 3.0 auto-analysis engine, and professional FCRA/FDCPA dispute letter generation.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Frontend**: React 19 + TypeScript + Vite + Tailwind CSS + shadcn/ui
+- **Backend**: Hono + tRPC 11 + Drizzle ORM + MySQL
+- **Auth**: OAuth 2.0 (Kimi)
+- **Security**: AES-256-GCM field-level encryption for all PII
+- **Scoring**: VantageScore 3.0 deterministic credit analysis engine
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Auto Credit Analysis** — Enter your info, app generates a full 3-bureau credit report with negative items
+- **8 Dispute Letter Types** — FCRA 609/611/623, FDCPA 809, Goodwill, Pay-for-Delete, Cease & Desist
+- **AES-256 Encryption** — All SSN, addresses, PII encrypted at field level
+- **3D Luxe UI** — Glass morphism, mouse-tracking tilt cards, gold accent dark theme
+- **Score Tracking** — Monitor score changes across all 3 bureaus over time
+- **Creditor Management** — Track contact info, account status, negotiation history
 
-## Expanding the ESLint configuration
+## Deploy
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+```bash
+# Install
+npm install
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+# Dev
+npm run dev
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+# Build
+npm run build
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Start (production)
+npm start
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Render.com Deployment
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Use the included `render.yaml` Blueprint or configure manually:
+- **Build Command**: `npm run build`
+- **Start Command**: `node dist/boot.js`
+- **Health Check**: `/api/trpc/ping`
